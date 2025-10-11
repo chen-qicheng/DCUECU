@@ -1,0 +1,48 @@
+# 编译输出目录（自动生成，无需提交）
+/build/
+
+# CMake相关临时文件
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+*.cmake
+
+# 交叉编译工具链生成的文件
+toolchain.cmake.*
+
+# 目标文件和可执行文件
+*.o
+*.obj
+*.elf
+*.bin
+*.hex
+*.out
+*.map
+
+# 预编译头文件
+*.gch
+*.pch
+
+# 日志文件
+*.log
+*.trace
+
+# IDE配置文件（通用）
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store  # macOS系统文件
+
+# IDE特定配置
+*.project
+*.cproject
+*.settings/
+*.launch
+*.workspace
+
+# 本地配置文件（不共享的个人配置）
+/config/local/
