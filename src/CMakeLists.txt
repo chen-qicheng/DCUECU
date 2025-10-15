@@ -1,2 +1,2 @@
-add_subdirectory(PowerManager)
-add_subdirectory(Sensors)
+add_subdirectory(power-manager)
+# add_subdirectory(sensor-collector)
