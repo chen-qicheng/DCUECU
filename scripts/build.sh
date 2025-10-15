@@ -73,7 +73,7 @@ if [ "$1"x = "all"x -o "$1"x = "-all"x -o "$1"x = "-a"x ]; then
     clean_file
     build_file
 elif [ "$1"x = "test"x -o "$1"x = "-test"x -o "$1"x = "-t"x ]; then
-    test_file()
+    test_file
 elif [ "$1"x = "cross"x -o "$1"x = "-cross"x -o "$1"x = "-c"x ]; then
     clean_file
     cross_build
