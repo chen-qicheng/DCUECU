@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.11)
 project(Willfar-DCUECU-2025 VERSION 1.0.0)
 
 set(CMAKE_BUILD_TYPE "release")
@@ -23,3 +23,4 @@ file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
 
 # 使用add_subdirectory包含子目录
 add_subdirectory(src)
+add_subdirectory(libs)
