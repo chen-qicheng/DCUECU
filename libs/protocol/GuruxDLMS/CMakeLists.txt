@@ -1,17 +1,19 @@
-add_definitions(-w -fno-exceptions -s -O3 -fPIC)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -std=c++11")
+# 以当前最后一级目录名，作为库名
+get_filename_component(TARGET_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
-SET(INC_LIST
-./
-../include)
+# 定义头文件搜索路径列表
+set(INC_LIST
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
 
-# 自动查找所有.cpp文件
-file(GLOB_RECURSE DLMS_LIB_SRC_LIST "*.cpp")
+# 自动查找当前目录及子目录下所有 .cpp 源文件
+file(GLOB_RECURSE LIB_SRC_LIST "*.cpp")
 
-INCLUDE_DIRECTORIES(${INC_LIST})
+# 创建库目标
+add_library(${TARGET_NAME} SHARED ${LIB_SRC_LIST})
 
-set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
-add_library(GuruxDLMS SHARED ${DLMS_LIB_SRC_LIST})
-
-
-
+# 为库关联头文件路径
+target_include_directories(${TARGET_NAME}
+  PUBLIC
+    ${INC_LIST}  # 依赖此库的目标会自动继承这些头文件路径
+)
