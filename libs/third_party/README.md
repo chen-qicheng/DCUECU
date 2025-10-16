@@ -14,24 +14,13 @@
 | [gflags](https://github.com/gflags/gflags)         | v2.2.2  | 轻量级命令行参数解析库，支持多种参数类型（整数、字符串、布尔值等） | https://github.com/gflags/gflags     |
 | [glog](https://github.com/google/glog)             | v0.6.0  | Google 开源日志库，支持分级日志（DEBUG/INFO/WARN/ERROR）、日志轮转、堆栈跟踪等功能 | https://github.com/google/glog       |
 | [googletest](https://github.com/google/googletest) | v1.14.0 | Google 开源 C++ 测试框架，包含 Google Test（单元测试）和 Google Mock（模拟测试） | https://github.com/google/googletest |
+| [nlohmann/json](https://github.com/nlohmann/json)  | v3.11.3 | 现代C++ JSON库，提供直观的接口来处理JSON数据                 | https://github.com/nlohmann/json     |
+| [ZeroMQ](https://github.com/zeromq/libzmq)         | v4.3.5  | 高性能异步消息库，支持多种通信模式和协议                     | https://github.com/zeromq/libzmq     |
+| [SQLiteCpp](https://github.com/SRombauts/SQLiteCpp)| v3.3.1   | SQLite C++封装库，提供简洁的面向对象接口                     | https://github.com/SRombauts/SQLiteCpp |
 
 ## 目录结构
 
-`third_party` 目录用于存储所有第三方库的源码、构建文件及临时文件，结构如下：
-
-```plaintext
-third_party/ 
-├── gflags-src/       # gflags 源代码目录（从 GitHub 下载）
-├── gflags-build/     # gflags 构建产物目录（Makefile、目标文件等）
-├── gflags-subbuild/  # gflags 子构建临时目录（FetchContent 内部使用）
-├── glog-src/         # glog 源代码目录
-├── glog-build/       # glog 构建产物目录
-├── glog-subbuild/    # glog 子构建临时目录
-├── googletest-src/   # googletest 源代码目录
-├── googletest-build/ # googletest 构建产物目录
-├── googletest-subbuild/ # googletest 子构建临时目录
-└── ...               # 新增第三方库对应的目录（按相同命名规则扩展）
-```
+`third_party` 目录用于存储所有第三方库的源码、构建文件及临时文件，此目录内容无需过多关注。
 
 ## 依赖关系
 
@@ -45,35 +34,26 @@ third_party/
 ### 1. gflags 配置
 
 ```cmake
-# 构建为静态库（默认不生成动态库 .so/.dll）
-set(GFLAGS_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-# 启用位置无关代码（确保可嵌入动态库）
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "" FORCE)
-# 禁用 gflags 自身的测试目标（减少构建耗时）
-set(GFLAGS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GFLAGS_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 ```
 
 ### 2. glog 配置
 
 ```cmake
-# 禁用 glog 自带的测试用例构建
-set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
-# 启用 gflags 支持（让 glog 通过 gflags 解析日志相关参数）
+set(WITH_GTEST OFF CACHE BOOL "" FORCE)
 set(WITH_GFLAGS ON CACHE BOOL "" FORCE)
-# 指定 gflags 依赖路径（避免 glog 找不到 gflags）
-set(gflags_DIR "${gflags_BINARY_DIR}" CACHE PATH "" FORCE)
 ```
 
 ### 3. googletest 配置
 
 ```cmake
-# 强制使用共享 CRT（C Runtime Library），避免链接冲突（Windows 环境关键配置）
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-# 同时构建 Google Mock（默认随 googletest 一起构建）
 set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
-# 禁用 googletest 自身的测试目标（减少构建耗时）
 set(BUILD_GTEST OFF CACHE BOOL "" FORCE)
 ```
+
+其他库的配置信息请查看该库的 `CMakeLists.txt` 文件。
 
 ## 项目中使用第三方库
 
@@ -92,6 +72,15 @@ target_link_libraries(your_test_target PRIVATE
     gtest::gmock        # Google Mock 模拟库
     gtest::gtest_main   # googletest 提供的默认 main 函数（可选）
 )
+
+# 示例4：链接 nlohmann/json（JSON处理）
+target_link_libraries(your_target PRIVATE nlohmann_json::nlohmann_json)
+
+# 示例5：链接 ZeroMQ（消息通信）
+target_link_libraries(your_target PRIVATE libzmq)
+
+# 示例6：链接 SQLiteCpp（数据库操作）
+target_link_libraries(your_target PRIVATE SQLiteCpp)
 ```
 
 ## 更新第三方库
@@ -182,12 +171,5 @@ target_link_libraries(your_test_target PRIVATE
 
 ## 许可证信息
 
-所有第三方库均使用官方开源许可证，符合商业项目使用要求，具体如下：
-
-| 库名       | 许可证类型           | 核心条款                                                     |
-| ---------- | -------------------- | ------------------------------------------------------------ |
-| gflags     | BSD 3-Clause License | 允许商用、修改、分发，需保留版权声明和许可证文本，不承担 liability 责任 |
-| glog       | BSD 3-Clause License | 同上，可自由集成到商业项目中                                 |
-| googletest | BSD 3-Clause License | 同上，测试框架仅用于开发阶段，不影响最终产品许可证           |
-
-各库的完整许可证文本可在其源码目录的 `LICENSE` 文件中查看（如 `third_party/gflags-src/LICENSE`）。
+ - 所有第三方库均使用官方开源许可证，符合商业项目使用要求。
+ - 各库的完整许可证文本可在其源码目录的 `LICENSE` 文件中查看（如 `third_party/gflags-src/LICENSE`）。
