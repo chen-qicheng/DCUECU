@@ -37,7 +37,7 @@ cmake_cross_project() {
 }
 
 make_project() {
-    make -C ${BUILD_DIR} -j$(nproc)
+    make -s -C ${BUILD_DIR} -j$(nproc)
 }
 
 clean_file() {
