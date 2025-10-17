@@ -53,7 +53,8 @@ set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
 set(BUILD_GTEST OFF CACHE BOOL "" FORCE)
 ```
 
-其他库的配置信息请查看该库的 `CMakeLists.txt` 文件。
+其他库的配置信息请查看当前目录的 `CMakeLists.txt` 文件。
+关于配置项如何确定，每个库的拥有的配置项，和配置型命名都不同。这个需要查看该库的 `CMakeLists.txt` 文件。
 
 ## 项目中使用第三方库
 

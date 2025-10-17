@@ -13,8 +13,6 @@ FetchContent_Declare(
   GIT_PROGRESS   ON
 )
 set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "" FORCE)
-set(GFLAGS_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(gflags)
 
 
@@ -27,7 +25,7 @@ FetchContent_Declare(
   GIT_PROGRESS   ON
 )
 set(WITH_GTEST OFF CACHE BOOL "" FORCE)
-set(WITH_GFLAGS ON CACHE BOOL "" FORCE)
+set(WITH_GFLAGS OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glog)
 
 
