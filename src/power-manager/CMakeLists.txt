@@ -2,15 +2,14 @@
 get_filename_component(TARGET_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 project(${TARGET_NAME})
 
-# 源文件列表
 set(SOURCES
     main.cpp
 )
 
-#库列表
 set(LIB_LIST 
-    gflags_nothreads
+    gflags::gflags
     glog::glog
+    pthread
 )
 
 # 创建可执行文件
