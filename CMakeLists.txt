@@ -31,7 +31,8 @@ file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/build/lib)
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
 
 # 使用add_subdirectory包含子目录
-add_subdirectory(src)
 add_subdirectory(libs)
+add_subdirectory(src)
+
 # add_subdirectory(core)
-# add_subdirectory(test)
+add_subdirectory(test)
