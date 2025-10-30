@@ -14,7 +14,8 @@ set(CMAKE_CXX_FLAGS
     -Wno-unused-parameter \
     -Wno-unused-function \
     -Wno-unused-variable \
-    -Wno-unused-but-set-variable"
+    -Wno-unused-but-set-variable \
+    -Wunused-includes"
 )
 
 # 设置不同类型的输出目录
@@ -33,6 +34,4 @@ file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/build/bin)
 # 使用add_subdirectory包含子目录
 add_subdirectory(libs)
 add_subdirectory(src)
-
-# add_subdirectory(core)
 add_subdirectory(test)
