@@ -17,119 +17,102 @@
 ProgramWatch::ProgramWatch()
 {
     ProgConfName[0] = '\0';
-    isreboot = false;
+    isReboot = false;
+    Init();
+}
+
+ProgramWatch::~ProgramWatch()
+{
+}
+
+void ProgramWatch::Init()
+{
+    ProgConf.Read(ProgConfName);
+    m_ProgramList = ProgConf.GetPrograms();
 }
 
 void ProgramWatch::Run()
 {
-    struct Program * tmp;
-
-    tmp = ProgConf.FirstProg();
-
-    while( tmp != 0 ) 
+    for(auto& program : m_ProgramList)
     {
-        tmp->pid = fork();
-        if ( tmp->pid < 0 ) 
+        program.pid = fork();
+        if (program.pid < 0 ) 
         {
-            exit( -1 );
+            exit(-1);
         }
-        else if ( tmp->pid == 0 ) 
+        else if (program.pid == 0) 
         {
-            execv( tmp->path, tmp->param );
-            exit( -1 );
+            execv(program.path, program.param);
+            exit(-1);
         }
-
-        tmp = ProgConf.NextProg();
     }
 }
 
 void ProgramWatch::Watch()
 {
-    struct Program * tmp;
-    
-    tmp = ProgConf.FirstProg();
-    while ( tmp != 0 ) 
+    for(auto& program : m_ProgramList)
     {
-        if ( waitpid( tmp->pid, 0, WNOHANG ) != 0 ) 
+        if (waitpid(program.pid, 0, WNOHANG) != 0) 
         {
-            if ( tmp->mode == REBOOT ) 
+            if (program.mode == REBOOT) 
             {
                 RebootSystem();
                 return;
             }
-            else if ( tmp->mode == RERUN )
+            else if (program.mode == RERUN)
             {
-                tmp->pid = fork();
-                if ( tmp->pid < 0 ) 
+                program.pid = fork();
+                if (program.pid < 0) 
                 {
                     RebootSystem();
                 }
-                else if ( tmp->pid == 0 ) 
+                else if (program.pid == 0) 
                 {
-                    execv( tmp->path, tmp->param );
-                    exit( -1 );
+                    execv(program.path, program.param);
+                    exit(-1);
                 }
             }
             else
-            {   // tmp->pid == ONCE 
+            {   // program.pid == ONCE 
                 /* do something */
             }
         }
-        tmp = ProgConf.NextProg();
     }
 }
 
 void ProgramWatch::SendSignal()
 {
-    struct Program * tmp;
-    
-    tmp = ProgConf.FirstProg();
-    while ( tmp != 0 ) 
+    for(auto& program : m_ProgramList)
     {
-        if ( waitpid( tmp->pid, 0, WNOHANG ) == 0 ) 
+        if (waitpid(program.pid, 0, WNOHANG) == 0) 
         {
-            kill( tmp->pid, SIGUSR1 );
+            kill(program.pid, SIGUSR1);
         }
-        tmp = ProgConf.NextProg();
     }
 }
 
-void ProgramWatch::SetConfName( char * name )
+void ProgramWatch::SetConfName(char * name)
 {
-    if ( name == 0 ) 
+    if (name == nullptr) 
     {
         return;
     }
 
-    strncpy( ProgConfName, name, sizeof( ProgConfName ) );
+    strncpy(ProgConfName, name, sizeof(ProgConfName));
 
     ProgConfName[149] = '\0';
 }
 
-void ProgramWatch::Init()
-{
-    ProgConf.Clear();
-    ProgConf.Read( ProgConfName );
-}
-
-ProgramWatch::~ProgramWatch()
-{
-    ProgConf.Clear();
-}
 
 void ProgramWatch::RebootSystem()
 {
-    struct Program * tmp;
-
-    tmp = ProgConf.FirstProg();
-    while ( tmp != 0 ) 
+    for(auto& program : m_ProgramList)
     {
-        if ( waitpid( tmp->pid, 0, WNOHANG ) == 0 ) 
+        if (waitpid(program.pid, 0, WNOHANG ) == 0) 
         {
-            kill( tmp->pid, SIGTERM );
+            kill(program.pid, SIGTERM);
         }
-        tmp = ProgConf.NextProg();
     }
 
-    isreboot = true;
+    isReboot = true;
 }

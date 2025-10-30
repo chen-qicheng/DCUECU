@@ -14,12 +14,14 @@ public:
     void SetConfName( char * name );
     void Init();
 
-    bool isreboot;
+    bool isReboot;
     
 private:
     void RebootSystem();
     class ConfigFile ProgConf;
     char ProgConfName[150];
+
+    std::list<struct Program> m_ProgramList;
 };
 
  

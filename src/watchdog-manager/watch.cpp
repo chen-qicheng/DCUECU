@@ -22,13 +22,13 @@
 
 #include "event_id.h"
 
-#define MAX_FILE_NUM    (100)
+#define MAX_FILE_NUM (100)
 #define BUFLEN 64
 #define LINUM 2
 #define MAX_TRIES 3
 
 
-void InitDaemon( void );
+void InitDaemon(void);
 void initenv();
 
 enum PROCESS_STATUS
@@ -50,15 +50,16 @@ enum PROCESS_STATUS
 ////////////////////////////////////////////////////////////
 enum PROCESS_STATUS GetPidState( int pid )
 {
-    char buffer[BUFLEN], state[2] = { 0, 0 };
-    FILE *proc_fs_p;
-    int coln_count = 1, tmp = 0;
+    char buffer[BUFLEN];
+    char state[2] = {0, 0};
+
     if (snprintf(buffer, BUFLEN, "/proc/%d/status", pid) >= BUFLEN)
     {
         printf("buffer overflow detected\n");
         return NO_EXIST;
     }
 
+    FILE *proc_fs_p;
     proc_fs_p = fopen(buffer , "r");
     if (!proc_fs_p)
     {
@@ -66,21 +67,23 @@ enum PROCESS_STATUS GetPidState( int pid )
         return NO_EXIST;
     }
 
-    while ( fgets( buffer, BUFLEN, proc_fs_p ) != NULL )
+    int coln_count = 1, tmp = 0;
+
+    while (fgets( buffer, BUFLEN, proc_fs_p ) != NULL)
     {
         tmp++;
-        if ( tmp != LINUM )
+        if (tmp != LINUM)
         {
             continue;
         }
 
-        for ( int i = 0; i < BUFLEN - 1; i++ )
+        for (int i = 0; i < BUFLEN - 1; i++)
         {
-            if ( buffer[i] == ':' )
+            if (buffer[i] == ':')
             {
                 coln_count--;
             }
-            else if ( !coln_count && !isblank( buffer[i] ) )
+            else if (!coln_count && !isblank(buffer[i]))
             {
                 state[0] = buffer[i];
                 state[1] = buffer[i + 1];
@@ -89,9 +92,9 @@ enum PROCESS_STATUS GetPidState( int pid )
         }
         break;
     }
-    fclose( proc_fs_p );
+    fclose(proc_fs_p);
 
-    switch ( state[0] )
+    switch (state[0])
     {
         case 'R': return RUNNING;
         case 'W': return OTHER;
@@ -116,28 +119,16 @@ enum PROCESS_STATUS GetPidState( int pid )
 ///////////////////////////////////////////////////////////////////
 void SaveSystem( int pid )
 {
-    for ( int i = 0; i < MAX_TRIES; i ++ )
+    for (int i = 0; i < MAX_TRIES; i ++)
     {
         kill( pid, SIGKILL );
-        sleep( 1 );
-        if ( GetPidState ( pid ) != DISK_SLEEP )
+        sleep(1);
+        if (GetPidState ( pid ) != DISK_SLEEP)
         {
             return;
         }
     }
-
     syslog( LOG_CONS|LOG_WARNING, "不能杀死进程，系统复位.\n" );
-
-	FILE *content;
-	char buff[10];
-	memset(buff,0,sizeof(buff));
-	content = fopen(DETAIL_RESET_BY_SW,"w");
-
-	sprintf(buff,"%d",DISK_SLEEP_REBOOT_ID);
-
-	fwrite(buff,strlen(buff),1,content);
-
-	fclose(content);
 	
     system( "/sbin/reboot" );
     sleep( 20 );
@@ -148,10 +139,10 @@ int Watch(const char *file, const struct stat *sb, int flag)
 {
     struct process_t process = {0, 1, 0, ""};
 
-    if ( flag == FTW_F )
+    if (flag == FTW_F)
     {
         FILE* fp = fopen(file, "rb");
-        if(fp==NULL)
+        if(fp == NULL)
         {
             return 0;
         }
@@ -159,22 +150,22 @@ int Watch(const char *file, const struct stat *sb, int flag)
         fclose( fp );
 
         struct sysinfo info ;
-        if ( sysinfo( &info ) < 0 )
+        if (sysinfo( &info ) < 0)
         {
             return 0;
         }
 
-        if ( process.up_time + process.dead_seconds < info.uptime )
+        if (process.up_time + process.dead_seconds < info.uptime)
         {
-            if( process.pid > 0 )
+            if (process.pid > 0)
             {
                 if ( GetPidState( process.pid ) == DISK_SLEEP )
                 {
-                    syslog( LOG_CONS|LOG_WARNING, "进程%s异常，进程处于'D'状态.\n", process.name);
-                    SaveSystem( process.pid );
+                    syslog(LOG_CONS|LOG_WARNING, "进程%s异常，进程处于'D'状态.\n", process.name);
+                    SaveSystem(process.pid);
                 }
                 kill(process.pid, SIGKILL);
-                syslog( LOG_CONS|LOG_WARNING, "进程%s异常，软看门狗将其复位\n", process.name);
+                syslog(LOG_CONS|LOG_WARNING, "进程%s异常，软看门狗将其复位\n", process.name);
             }
             remove(file);
         }
@@ -183,20 +174,20 @@ int Watch(const char *file, const struct stat *sb, int flag)
 }
 
 
-int main( int argc, char *argv[], char *env[] )
+int main(int argc, char *argv[], char *env[])
 {
 
     //清空软看门狗工作目录
-    char command [sizeof( SOFT_WATCH_PATH ) + 10];
-    sprintf( command, "rm -rf %s", SOFT_WATCH_PATH );
-    system( command );
+    char command [sizeof(SOFT_WATCH_PATH) + 10];
+    sprintf(command, "rm -rf %s", SOFT_WATCH_PATH);
+    system(command);
 
     mkdir(SOFT_WATCH_PATH, S_IRWXU);
 
     class ProgramWatch progs;
-    class Watchdog  watchdog;
+    class Watchdog watchdog;
 
-    progs.SetConfName( configfile );
+    progs.SetConfName(configfile);
 
     // to mask the SIGTERM signal
     signal( SIGTERM, SIG_IGN );
@@ -215,104 +206,92 @@ int main( int argc, char *argv[], char *env[] )
     progs.Run();
 
     
-    while( 1 ) 
+    while (true) 
     {
         sleep(1);
         progs.Watch();
 
-        if ( progs.isreboot ) 
+        if (progs.isReboot) 
         {
             perror("program crash, system must be reboot!\n");
             // to reboot system
-            for( int i = 0; i < 30; i ++ ) 
+            for(int i = 0; i < 30; i ++) 
             {
                 watchdog.Feed();
                 sleep(1);
             }
-
-            //记录设备重启原因
-            FILE *content;
-            char buff[10];
-            memset(buff,0,sizeof(buff));
-            content = fopen(DETAIL_RESET_BY_SW,"w");
-
-            sprintf(buff,"%d",TIMER_REBOOT_ID);
-
-            fwrite(buff,strlen(buff),1,content);
-
-            fclose(content);
 	  
-            system( "/sbin/reboot" );
+            system("/sbin/reboot");
         }
         watchdog.Feed();
         ftw(SOFT_WATCH_PATH, Watch, MAX_FILE_NUM);
     }
-    // at normal state never reach here
+
     return 0;
 }
 
-void InitDaemon (void)
+void InitDaemon(void)
 {
     struct sigaction act;
     int max_fd, i, ret;
 
     /*进行第1次fork,为setsid作准备 */
-    ret = fork ();
+    ret = fork();
 
     if (ret < 0) 
     {
         perror("InitDaemon() fork failed!");
-        exit (1);
+        exit(1);
     }
     else if (ret != 0)
     {
-        exit (0);
+        exit(0);
     }
 
     /*调用setsid，使得进程旧会话过程分离 */
-    ret = setsid ();
+    ret = setsid();
     if (ret < 0) 
     {
         perror("InitDaemon() setsid failed!");
-        exit (1);
+        exit(1);
     }
 
     /*忽略信号SIGHUP */
     act.sa_handler = SIG_IGN;
-    sigemptyset (&act.sa_mask);
+    sigemptyset(&act.sa_mask);
     act.sa_flags = 0;
-    sigaction (SIGHUP, &act, 0);
+    sigaction(SIGHUP, &act, 0);
 
     /*
     *进行第2次fork，使进程不再是会话过程的领头进程，因而不能再打开
     *终端作为自己的控制终端
     */
-    ret = fork ();
+    ret = fork();
 
     if (ret < 0) 
     {
         perror("InitDaemon() fork failed!");
-        exit (1);
+        exit(1);
     }
     else if (ret != 0)
     {
-        exit (0);
+        exit(0);
     }
 
     /*修改进程的当前目录 */
-    chdir ("/");
+    chdir("/");
 
     /*清除进程的文件掩码 */
-    umask (0);
+    umask(0);
 
     /*使得进程脱离原来的进程组，不再受发往原来进程组的信号的干扰 */
-    setpgrp ();
+    setpgrp();
 
     /*关闭进程所有的文件描述符 */
-    max_fd = sysconf (_SC_OPEN_MAX);
+    max_fd = sysconf(_SC_OPEN_MAX);
     for (i = 0; i < max_fd; i++)
     {
-        close (i);
+        close(i);
     }
 
     /*打开空设备，使得后续的输出语句不会出问题 */
@@ -335,11 +314,6 @@ void InitDaemon (void)
 void initenv()
 {
     setenv( "HOME", "/home/et1000", 1 );
-    setenv( "TTYPE", g_termtype_str, 1 );
-    setenv( "locale", g_locale_str, 1 );
-    setenv( "LOCALE", g_locale_str, 1 );
-    setenv( "cputype", g_cputype_str, 1 );
-    setenv( "CPUTYPE", g_cputype_str, 1 );
     chdir( "/home/et1000" );
 }
 

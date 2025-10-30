@@ -1,10 +1,12 @@
 #ifndef _CONFIG_FILE_HPP
 #define _CONFIG_FILE_HPP
 
+#include <list>
+
 enum process_mode {
     RERUN = 1,
     REBOOT = 2,
-    ONCE	= 3
+    ONCE = 3
 };
 
 struct Program {
@@ -14,35 +16,21 @@ struct Program {
     char * param[50];
 };
 
-struct ProgramList {
-    struct Program node;
-    struct ProgramList * next;
-};
-
-
 class ConfigFile {
 public:
     ConfigFile();
     ~ConfigFile();
 
-    void Read( char const * FileName );
-    struct Program *  FirstProg( );
-    struct Program *  NextProg( );
-    struct Program * CurrProg( );
-    void Clear();
-
+    void Read(char const * fileName);
+    std::list<struct Program> GetPrograms();
 
 private:
+    FILE * m_fp;
+    std::list<struct Program> m_programs;  
 
-    static const char * DefaultConfName;
+    static const char * defaultConfigFile;
 
-    struct ProgramList * PrgList;
-    struct ProgramList * CurrNode;
-
+    void OpenFile(char const * fileName);
 };
 
-extern unsigned int rebootinterval;
-extern char g_locale_str[20];
-extern char g_cputype_str[20];
-extern char g_termtype_str[20];
 #endif // _CONFIG_FILE_HPP
