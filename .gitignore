@@ -8,7 +8,6 @@ CMakeFiles/
 Makefile
 cmake_install.cmake
 install_manifest.txt
-*.cmake
 
 # 交叉编译工具链生成的文件
 toolchain.cmake.*
