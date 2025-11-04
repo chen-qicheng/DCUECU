@@ -9,7 +9,7 @@ set(CMAKE_SYSTEM_PROCESSOR arm)
 # 设置交叉编译工具路径
 # 注意：请根据实际安装的工具链调整这些路径
 set(TOOLCHAIN_DIR /opt/arm-201305-gnueabi)
-set(CMAKE_SYSROOT ${TOOLCHAIN_DIR}/libc)
+set(CMAKE_SYSROOT ${TOOLCHAIN_DIR}/arm-none-linux-gnueabi/libc)
 
 set(CMAKE_C_COMPILER ${TOOLCHAIN_DIR}/bin/arm-none-linux-gnueabi-gcc)
 set(CMAKE_CXX_COMPILER ${TOOLCHAIN_DIR}/bin/arm-none-linux-gnueabi-g++)
