@@ -2,114 +2,105 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 #include "config_file.hpp"
 
-const char * ConfigFile::defaultConfigFile = "/home/et1000/conf/watchdog.conf";
+const string DEFAULT_CONFIG_FILE = "/home/et1000/conf/watchdog.conf";
 
 ConfigFile::ConfigFile()
 {
-    m_programs.clear();
-    m_fp = nullptr;
+    m_programList.clear();
 }
 
 ConfigFile::~ConfigFile()
 {
-    if (m_fp != nullptr) 
-    {
-        fclose(m_fp);
-        m_fp = nullptr;
-    }
-
-    m_programs.clear();
+    m_programList.clear();
 }
 
-void ConfigFile::OpenFile(char const * fileName)
+bool isDelimiter(char c) 
 {
-    // 如果已经有打开的文件，先关闭它避免资源泄漏
-    if (m_fp != nullptr) 
-    {
-        fclose(m_fp);
-        m_fp = nullptr;
-    }
+    return c == ' ' || c == '=' || c == ',';
+}
 
-    if (fileName == nullptr  || strlen(fileName) == 0)
+std::vector<std::string> splitString(const std::string& str) 
+{
+    std::vector<std::string> result;
+    std::string currentSubstr;
+    
+    for (char c : str) 
     {
-        if (access(defaultConfigFile, R_OK) == 0 )
+        // 如果是分隔符
+        if (isDelimiter(c)) 
         {
-            fileName = defaultConfigFile;
+            // 如果当前有积累的子串，添加到结果中
+            if (!currentSubstr.empty()) 
+            {
+                result.push_back(currentSubstr);
+                currentSubstr.clear();
+            }
+        } 
+        else 
+        {
+            // 不是分隔符则添加到当前子串
+            currentSubstr += c;
         }
     }
-
-    m_fp = fopen(fileName, "r");
-    if (m_fp == 0) 
+    
+    // 处理最后一个子串
+    if (!currentSubstr.empty()) 
     {
-        fprintf(stderr, "can not open watchdog config file: %s", fileName);
-        return;
+        result.push_back(currentSubstr);
     }
+    
+    return result;
 }
 
 
-void ConfigFile::Read(char const * fileName) 
+void ConfigFile::Read(string fileName) 
 {
-    char line[160];
-    char delimiter[] = " =,\t\n";
-    char *token;
-
-    OpenFile(fileName);
-    if (m_fp == nullptr) 
+    std::ifstream configFile(fileName);
+    if (!configFile.is_open()) 
     {
         return;
     }
 
-    fseek( m_fp, 0L, SEEK_SET );
-
-    while (fgets(line, sizeof(line), m_fp) != nullptr) 
+    std::string line;
+    while (std::getline(configFile, line)) 
     {
-        struct Program tmpNode;
+        struct Program tempNode;
+        tempNode.pid = -1;
+        tempNode.param_count = 0;
 
-        char *last;
-        token = strtok_r(line, delimiter, &last);
+        std::vector<std::string> tokens = splitString(line);
+        if (tokens.size() < 2) 
+        {
+            continue;
+        }
 
-        /* to set program run parameters */
-        if ( strcmp( token, "reboot" ) == 0 ) 
+        if (tokens[0] == "reboot")
         {
-            tmpNode.mode = REBOOT;
+            tempNode.mode = REBOOT;
         }
-        else if ( strcmp( token, "rerun" ) == 0 )
+        else if (tokens[0] == "rerun")
         {
-            tmpNode.mode = RERUN;
+            tempNode.mode = RERUN;
         }
-        else if ( strcmp( token, "once" ) == 0 )
+        else if (tokens[0] == "once")
         {
-            tmpNode.mode = ONCE;
+            tempNode.mode = ONCE;
         }
         else 
         {
             continue;
         }
 
-        token = strtok_r(nullptr, delimiter, &last);
-        if ( token == nullptr ) 
+        tempNode.path = tokens[1];
+        
+        for (size_t i = 2; i < tokens.size() && tempNode.param_count < 50; ++i)
         {
-            continue;
-        }
-        tmpNode.path = strdup(token);
-
-        for (int i = 0; i < (int)(sizeof(tmpNode.param)/sizeof(char *)); i ++ ) 
-        {
-            token = strtok_r(nullptr, delimiter, &last);
-            if ( token == nullptr ) 
-            {
-                tmpNode.param[i] = 0;
-                break;
-            }
-            tmpNode.param[i] = strdup(token);
+            tempNode.param[tempNode.param_count++] = tokens[i];
         }
 
-        tmpNode.pid = -1;
-
-        m_programs.push_back(tmpNode);
+        m_programList.push_back(tempNode);
     }
     return;
 }
@@ -117,5 +108,5 @@ void ConfigFile::Read(char const * fileName)
 
 std::list<struct Program> ConfigFile::GetPrograms()
 {
-    return m_programs;
+    return m_programList;
 }

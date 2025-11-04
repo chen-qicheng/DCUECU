@@ -16,43 +16,60 @@
 
 ProgramWatch::ProgramWatch()
 {
-    ProgConfName[0] = '\0';
-    isReboot = false;
-    Init();
+    ConfigFile configReader;
+    configReader.Read(m_configFileName);
+    m_programList = configReader.GetPrograms();
+
+    m_needReboot = false;
 }
 
 ProgramWatch::~ProgramWatch()
 {
 }
 
-void ProgramWatch::Init()
-{
-    ProgConf.Read(ProgConfName);
-    m_ProgramList = ProgConf.GetPrograms();
-}
-
 void ProgramWatch::Run()
 {
-    for(auto& program : m_ProgramList)
+    for(auto& program : m_programList)
     {
-        program.pid = fork();
-        if (program.pid < 0 ) 
-        {
-            exit(-1);
-        }
-        else if (program.pid == 0) 
-        {
-            execv(program.path, program.param);
-            exit(-1);
-        }
+        StartProgram(program);
     }
+}
+
+
+void ProgramWatch::StartProgram(Program& program)
+{
+    program.pid = fork();
+    if (program.pid < 0) 
+    {
+        exit(-1);
+    }
+    else if (program.pid == 0) 
+    {
+        std::vector<char*> args;
+
+        for (int i = 0; i < program.param_count; ++i) 
+        {
+            args.push_back(const_cast<char*>(program.param[i].c_str()));
+        }
+        args.push_back(nullptr);
+
+        execv(program.path.c_str(), args.data());
+        
+        exit(-1);
+    }
+}
+
+
+bool ProgramWatch::IsProgramRunning(int pid)
+{
+    return waitpid(pid, 0, WNOHANG) == 0;
 }
 
 void ProgramWatch::Watch()
 {
-    for(auto& program : m_ProgramList)
+    for(auto& program : m_programList)
     {
-        if (waitpid(program.pid, 0, WNOHANG) != 0) 
+        if (!IsProgramRunning(program.pid)) 
         {
             if (program.mode == REBOOT) 
             {
@@ -61,20 +78,11 @@ void ProgramWatch::Watch()
             }
             else if (program.mode == RERUN)
             {
-                program.pid = fork();
-                if (program.pid < 0) 
-                {
-                    RebootSystem();
-                }
-                else if (program.pid == 0) 
-                {
-                    execv(program.path, program.param);
-                    exit(-1);
-                }
+                StartProgram(program);
             }
-            else
-            {   // program.pid == ONCE 
-                /* do something */
+            else if (program.mode == ONCE)
+            {   
+                // do nothing
             }
         }
     }
@@ -82,37 +90,36 @@ void ProgramWatch::Watch()
 
 void ProgramWatch::SendSignal()
 {
-    for(auto& program : m_ProgramList)
+    for(auto& program : m_programList)
     {
-        if (waitpid(program.pid, 0, WNOHANG) == 0) 
+        if (IsProgramRunning(program.pid)) 
         {
             kill(program.pid, SIGUSR1);
         }
     }
 }
 
-void ProgramWatch::SetConfName(char * name)
+void ProgramWatch::SetConfigFilePath(string configPath)
 {
-    if (name == nullptr) 
-    {
-        return;
-    }
-
-    strncpy(ProgConfName, name, sizeof(ProgConfName));
-
-    ProgConfName[149] = '\0';
+    m_configFileName = configPath;
 }
 
 
 void ProgramWatch::RebootSystem()
 {
-    for(auto& program : m_ProgramList)
+    for(auto& program : m_programList)
     {
-        if (waitpid(program.pid, 0, WNOHANG ) == 0) 
+        if (IsProgramRunning(program.pid))
         {
             kill(program.pid, SIGTERM);
         }
     }
 
-    isReboot = true;
+    m_needReboot = true;
+}
+
+
+bool ProgramWatch::IsNeedReboot()
+{ 
+    return m_needReboot; 
 }

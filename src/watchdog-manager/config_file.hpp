@@ -2,6 +2,10 @@
 #define _CONFIG_FILE_HPP
 
 #include <list>
+#include <vector>
+#include <string>
+#include <fstream>
+using namespace std;
 
 enum process_mode {
     RERUN = 1,
@@ -12,8 +16,9 @@ enum process_mode {
 struct Program {
     int pid;
     enum process_mode mode;
-    char * path;
-    char * param[50];
+    string path;
+    string param[50];
+    int param_count;
 };
 
 class ConfigFile {
@@ -21,16 +26,11 @@ public:
     ConfigFile();
     ~ConfigFile();
 
-    void Read(char const * fileName);
+    void Read(std::string fileName);
     std::list<struct Program> GetPrograms();
 
 private:
-    FILE * m_fp;
-    std::list<struct Program> m_programs;  
-
-    static const char * defaultConfigFile;
-
-    void OpenFile(char const * fileName);
+    std::list<struct Program> m_programList;  
 };
 
 #endif // _CONFIG_FILE_HPP

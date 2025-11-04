@@ -48,7 +48,7 @@ enum PROCESS_STATUS
 ///////////////////////////////////////////////////////////
 // 功能：根据输入的进程号获取该进程对应的进程状态
 ////////////////////////////////////////////////////////////
-enum PROCESS_STATUS GetPidState( int pid )
+enum PROCESS_STATUS GetPidState(int pid)
 {
     char buffer[BUFLEN];
     char state[2] = {0, 0};
@@ -69,7 +69,7 @@ enum PROCESS_STATUS GetPidState( int pid )
 
     int coln_count = 1, tmp = 0;
 
-    while (fgets( buffer, BUFLEN, proc_fs_p ) != NULL)
+    while (fgets(buffer, BUFLEN, proc_fs_p) != NULL)
     {
         tmp++;
         if (tmp != LINUM)
@@ -117,22 +117,22 @@ enum PROCESS_STATUS GetPidState( int pid )
 //       类似于死机现象，需要复位处理
 //       判断程序能否杀死
 ///////////////////////////////////////////////////////////////////
-void SaveSystem( int pid )
+void SaveSystem(int pid)
 {
     for (int i = 0; i < MAX_TRIES; i ++)
     {
-        kill( pid, SIGKILL );
+        kill(pid, SIGKILL);
         sleep(1);
-        if (GetPidState ( pid ) != DISK_SLEEP)
+        if (GetPidState (pid) != DISK_SLEEP)
         {
             return;
         }
     }
-    syslog( LOG_CONS|LOG_WARNING, "不能杀死进程，系统复位.\n" );
+    syslog(LOG_CONS|LOG_WARNING, "不能杀死进程，系统复位.\n");
 	
-    system( "/sbin/reboot" );
-    sleep( 20 );
-    system( "/usr/bin/killall -9 watchdog" );
+    system("/sbin/reboot");
+    sleep(20);
+    system("/usr/bin/killall -9 watchdog");
 }
 
 int Watch(const char *file, const struct stat *sb, int flag)
@@ -147,10 +147,10 @@ int Watch(const char *file, const struct stat *sb, int flag)
             return 0;
         }
         fread(&process, sizeof(process_t), 1, fp);
-        fclose( fp );
+        fclose(fp);
 
         struct sysinfo info ;
-        if (sysinfo( &info ) < 0)
+        if (sysinfo(&info) < 0)
         {
             return 0;
         }
@@ -159,7 +159,7 @@ int Watch(const char *file, const struct stat *sb, int flag)
         {
             if (process.pid > 0)
             {
-                if ( GetPidState( process.pid ) == DISK_SLEEP )
+                if (GetPidState(process.pid) == DISK_SLEEP)
                 {
                     syslog(LOG_CONS|LOG_WARNING, "进程%s异常，进程处于'D'状态.\n", process.name);
                     SaveSystem(process.pid);
@@ -176,7 +176,6 @@ int Watch(const char *file, const struct stat *sb, int flag)
 
 int main(int argc, char *argv[], char *env[])
 {
-
     //清空软看门狗工作目录
     char command [sizeof(SOFT_WATCH_PATH) + 10];
     sprintf(command, "rm -rf %s", SOFT_WATCH_PATH);
@@ -184,34 +183,26 @@ int main(int argc, char *argv[], char *env[])
 
     mkdir(SOFT_WATCH_PATH, S_IRWXU);
 
-    class ProgramWatch progs;
-    class Watchdog watchdog;
-
-    progs.SetConfName(configfile);
-
-    // to mask the SIGTERM signal
-    signal( SIGTERM, SIG_IGN );
-
-    progs.Init();
-
     InitDaemon();
-
+    
     initenv();
 
+    class Watchdog watchdog;
     watchdog.Open();
     watchdog.Feed();
     watchdog.Feed();
     watchdog.Feed();
 
+    class ProgramWatch progs;
+    progs.SetConfigFilePath(configfile);
     progs.Run();
-
     
     while (true) 
     {
         sleep(1);
         progs.Watch();
 
-        if (progs.isReboot) 
+        if (progs.IsNeedReboot()) 
         {
             perror("program crash, system must be reboot!\n");
             // to reboot system
@@ -224,6 +215,7 @@ int main(int argc, char *argv[], char *env[])
             system("/sbin/reboot");
         }
         watchdog.Feed();
+
         ftw(SOFT_WATCH_PATH, Watch, MAX_FILE_NUM);
     }
 
@@ -261,6 +253,9 @@ void InitDaemon(void)
     sigemptyset(&act.sa_mask);
     act.sa_flags = 0;
     sigaction(SIGHUP, &act, 0);
+
+    // to mask the SIGTERM signal
+    signal(SIGTERM, SIG_IGN);
 
     /*
     *进行第2次fork，使进程不再是会话过程的领头进程，因而不能再打开
@@ -313,7 +308,7 @@ void InitDaemon(void)
 
 void initenv()
 {
-    setenv( "HOME", "/home/et1000", 1 );
-    chdir( "/home/et1000" );
+    setenv("HOME", "/home/et1000", 1);
+    chdir("/home/et1000");
 }
 

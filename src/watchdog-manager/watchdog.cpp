@@ -6,33 +6,24 @@
 
 #include "watchdog.hpp"
 
-const char * Watchdog::name = "/dev/wfet1000wdog";
+const string WATCHDOG_FILE = "/dev/wfet1000wdog";
 
 Watchdog::Watchdog()
 {
-    fd = -1;
+    m_fd = -1;
 }
 
 
 // to open Watchdog device and to active watchdog device 
 bool Watchdog::Open()
 {
-    int retval;
-    char wBuf[2];
+    string file = WATCHDOG_FILE;
 
-    fd = open( name, O_RDWR ); 
+    m_fd = open(file.c_str(), O_RDWR); 
 
-    if ( fd < 0 ) 
+    if (m_fd < 0) 
     {
-        fd = -1;
-        return false;
-    }
-
-    wBuf[ 0 ] = 0x00;
-    wBuf[ 1 ] = 0x80;
-    retval = write( fd, wBuf, 2 );
-    if( retval != 2 ) 
-    {
+        m_fd = -1;
         return false;
     }
     return true;
@@ -41,11 +32,12 @@ bool Watchdog::Open()
 
 bool Watchdog::Close()
 {
-    if ( fd >= 0 )
+    if (m_fd >= 0)
     {
-        close( fd );
+        close(m_fd);
+        m_fd = -1;
+        return false;
     }
-
     return true;
 }
 
@@ -53,17 +45,15 @@ bool Watchdog::Close()
 // to "feed watchdog" in case of system reboot
 bool Watchdog::Feed()
 {
-    unsigned char wBuf[ 2 ];
-    int retval;
+    unsigned char commandBuff[2];
 
-    wBuf[ 0 ] = 0x00;
-    wBuf[ 1 ] = 0x80;
+    commandBuff[0] = 0x00;
+    commandBuff[1] = 0x80;
 
-    retval = write( fd, wBuf, 2 );
-    if(retval!=2) 
+    int result = write(m_fd, commandBuff, 2);
+
+    if(result != 2) 
     {
-        //log_err( "resetWatchdog(): write failed! " );
-        // exit(1);
         return false;
     }
     return true;

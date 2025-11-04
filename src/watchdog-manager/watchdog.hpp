@@ -1,6 +1,9 @@
 #ifndef _WATCHDOG_HPP
 #define _WATCHDOG_HPP
 
+#include <string>
+using namespace std;
+
 /////////////////////////////////////////////////////////////
 // to manage watchdog device
 ////////////////////////////////////////////////////////////
@@ -12,9 +15,7 @@ public:
     bool Close();
 
 private:
-    static const char * name;
-    int fd;
-
+    int m_fd;
 };
 
 #endif //_WATCHDOG_HPP

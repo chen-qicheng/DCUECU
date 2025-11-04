@@ -1,7 +1,10 @@
 #ifndef _PROGRAM_WATCH_HPP
 #define _PROGRAM_WATCH_HPP
 
+#include <string>
 #include "config_file.hpp"
+
+using namespace std;
 
 class ProgramWatch {
 public:
@@ -11,17 +14,17 @@ public:
     void Run();
     void Watch();
     void SendSignal();// now, we only send SIGUSR1 signal instantly after detected poweroff event
-    void SetConfName( char * name );
-    void Init();
+    void SetConfigFilePath(string configPath);
+    bool IsNeedReboot();
 
-    bool isReboot;
-    
 private:
     void RebootSystem();
-    class ConfigFile ProgConf;
-    char ProgConfName[150];
+    bool IsProgramRunning(int pid);
+    void StartProgram(Program& program);
 
-    std::list<struct Program> m_ProgramList;
+    bool m_needReboot;
+    string m_configFileName;
+    list<struct Program> m_programList;
 };
 
  
