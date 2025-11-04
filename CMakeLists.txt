@@ -5,18 +5,18 @@ set(CMAKE_BUILD_TYPE "release")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# 设置编译器选项
-set(CMAKE_CXX_FLAGS 
-    "${CMAKE_CXX_FLAGS} \
-    -Wall \
-    -Wextra \
-    -Wno-dev \
-    -Wno-unused-parameter \
-    -Wno-unused-function \
-    -Wno-unused-variable \
-    -Wno-unused-but-set-variable \
-    -Wunused-includes"
-)
+# # 设置编译器选项
+# set(CMAKE_CXX_FLAGS 
+#     "${CMAKE_CXX_FLAGS} \
+#     -Wall \
+#     -Wextra \
+#     -Wno-dev \
+#     -Wno-unused-parameter \
+#     -Wno-unused-function \
+#     -Wno-unused-variable \
+#     -Wno-unused-but-set-variable \
+#     -Wunused-includes"
+# )
 
 # 设置不同类型的输出目录
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/lib)

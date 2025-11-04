@@ -52,7 +52,7 @@ Willfar-DCUECU-2025/
 ## 3. 环境依赖
 3.1 **软件依赖**
 - 编译工具链：arm-none-linux-gnueabi-gcc
-- 构建工具：CMake（≥3.10）、Make（≥4.2）
+- 构建工具：CMake（≥3.11）、Make（≥4.2）
 - 烧录工具：OpenOCD（支持 JTAG/SWD）或 J-Link Commander
 - 可选工具：Doxygen（生成 API 文档）、VS Code（带 C/C++ 插件）
   
@@ -73,7 +73,7 @@ arm-none-eabi-gcc -v
 
 克隆项目并进入根目录：
 ```
-git clone [项目仓库地址]
+git clone git@github.com:chen-qicheng/DCUECU.git
 cd Willfar-DCUECU-2025
 ```
 
@@ -83,7 +83,11 @@ cd Willfar-DCUECU-2025
 # 执行编译脚本，产物输出到build/bin
 ./scripts/build.sh
 # 如需清理编译产物，执行：
-# ./scripts/clean.sh
+./scripts/build.sh clean
+# 全量编译（清理后重新编译）：
+./scripts/build.sh all
+# 交叉编译：
+./scripts/build.sh cross
 ```
 
 编译测试程序（可选）：
@@ -111,10 +115,21 @@ minicom -b 115200 -D /dev/ttyUSB0
 
 ## 5. 详细说明
 5.1 **业务模块说明**
-- sensor 模块：支持 I2C/SPI 接口传感器，默认集成 SHT30（温湿度）、ADS1115（ADC），新增传感器需在src/sensor下添加驱动适配。
-- comm 模块：CAN 支持 2.0B 协议（波特率 500kbps），ETH 支持 TCP 客户端模式，配置参数在config/compile/comm_config.h中修改。
+- power-manager 模块：负责电源管理和功耗控制功能
+- sensor-collector 模块：负责传感器数据采集和处理功能
 
-5.2 **多平台适配**
+5.2 **第三方库依赖**
+项目使用CMake的FetchContent模块管理第三方库依赖，包括：
+- gflags: 命令行参数解析库
+- glog: Google日志库
+- googletest: Google测试框架
+- nlohmann/json: 现代C++ JSON库
+- ZeroMQ: 高性能异步消息库
+- SQLiteCpp: SQLite C++封装库
+
+详细信息请参考 libs/third_party/README.md
+
+5.3 **多平台适配**
 
 如需适配新 MCU（如 ESP32）：
 1. 在driver/platform下新建esp32目录，实现 GPIO/UART 等驱动；
@@ -128,7 +143,7 @@ minicom -b 115200 -D /dev/ttyUSB0
 - 硬件原理图：存放于docs/hardware目录，需联系硬件工程师获取最新版本。
 
 6.2 **问题反馈**
-- 维护团队：Jack-Chen（[chen.qicheng@qq.com]）
+- 维护团队：Jack-Chen（chen.qicheng@qq.com）
 - 常见问题：见docs/faq.md（如 “编译报错 undefined reference to uart_send”，需检查驱动接口实现）
 
 6.3 **许可证**

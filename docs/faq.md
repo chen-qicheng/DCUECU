@@ -16,7 +16,7 @@ A: 使用提供的交叉编译工具链进行编译：
 
 ```bash
 cd scripts
-./build.sh 
+./build.sh cross
 ```
 
 ## Q: 构建输出文件在哪里？
@@ -51,3 +51,47 @@ A: 项目使用 Doxygen 生成API文档。在项目根目录执行以下命令�
 doxygen Doxyfile
 ```
 生成的文档位于 docs/api/ 目录中。
+
+## Q: CMake版本过低，无法编译项目？
+A: 可以使用以下命令升级CMake版本：
+```
+# 更新软件源
+sudo apt update
+
+# 安装新版 CMake
+sudo apt install -y cmake
+
+# 验证版本
+cmake --version
+
+```
+
+或者手动安装cmake 3.11版本
+```bash
+# 下载cmake 3.11 源码包
+wget https://github.com/Kitware/CMake/releases/download/v3.11/cmake-3.11.tar.gz
+
+# 解压源码包
+tar -zxvf cmake-3.11.tar.gz
+cd cmake-3.11
+
+# 配置编译选项（默认安装到 /usr/local/）
+./bootstrap
+
+# 编译（-j4 表示使用4个CPU核心加速，可根据你的CPU核心数调整）
+make -j4
+
+# 安装到系统（需要root权限）
+sudo make install
+
+```
+太高级的cmake版本可能会因为g++版本问题导致编译错误，请根据实际需求选择合适的版本。
+
+
+## Q: 64位系统下无法使用32位交叉编译工具链？
+A: 64位系统下，可以使用以下命令安装32位交叉编译工具链：
+```bash
+sudo apt install libc6-dev-i386  # 32位系统兼容库（64位系统可选）
+```
+
+
